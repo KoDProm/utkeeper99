@@ -1,0 +1,95 @@
+I changed something in the ucc file for ServerSpecific Setup
+instead of the original Player related UCC.
+
+MAKE A BACKUP FROM YOUR /System/ucc FILE!
+
+Then edit or change it to my version if you only using
+the Game as Server. 
+
+
+#!/bin/sh
+#
+# ucc startup script
+#
+# Function to find the real directory a program resides in.
+# Feb. 17, 2000 - Sam Lantinga, Loki Entertainment Software
+FindPath()
+{
+    fullpath=`echo $1 | grep /`"
+    if [ "$fullpath" = "" ]; then
+        oIFS="$IFS"
+        IFS=:
+        for path in $PATH
+        do if [ -x "$path/$1" ]; then
+               if [ "$path" = "" ]; then
+                   path="."
+               fi
+               fullpath="$path/$1"
+               break
+           fi
+        done
+        IFS="$oIFS"
+    fi
+    if [ "$fullpath" = "" ]; then
+        fullpath="$1"
+    fi
+    # Is the awk/ls magic portable?
+    if [ -L "$fullpath" ]; then
+        fullpath=`ls -l "$fullpath" | awk '{print $11}'`"
+    fi
+    dirname $fullpath
+}
+
+# Set the home if not already set.
+if [ "${UT_DATA_PATH}" = "" ]; then
+    UT_DATA_PATH=`FindPath $0`
+fi
+
+# Use server directory for preferences (not user home)
+UT_PREFS="${UT_DATA_PATH}/.."
+
+LD_LIBRARY_PATH=.:${UT_DATA_PATH}:${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+export UT_DATA_PATH
+
+create_prefpath()
+{
+    path="${UT_PREFS}/$1"
+    if [ ! -d "$path" ]; then
+        echo "Creating directory $path"
+        mkdir -p "$path"
+    fi
+}
+
+copy_if_needed()
+{
+    dist="${UT_DATA_PATH}/$1"
+    file="${UT_PREFS}/$1"
+    if [ ! -f "$file" ]; then
+        echo "Installing default $file"
+        cp "$dist" "$file"
+    fi
+}
+
+# Ensure System directory exists (should always exist on a proper installation)
+if [ ! -d ${UT_PREFS}/System ]
+then
+    echo "Creating preferences directory: ${UT_PREFS}/System"
+    mkdir -p ${UT_PREFS}/System
+fi
+
+create_prefpath System
+
+# point to where the game is installed
+echo "$UT_DATA_PATH" > "$UT_PREFS/install_dir"
+
+# Let's boogie!
+if [ -x "${UT_DATA_PATH}/ucc-bin" ]
+then
+	cd "${UT_DATA_PATH}/"
+	exec "./ucc-bin" $*
+fi
+
+echo "Couldn't run ucc (ucc-bin). Is UT_DATA_PATH set?"
+exit 1
+

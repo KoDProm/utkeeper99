@@ -1,0 +1,54 @@
+UT Services 
+WATCH OUT FOR rm code!
+
+
+/etc/systemd/system
+utserver.service.sh
+
+
+[Unit]
+Description=Unreal Tournament 99 Server
+After=network.target
+
+[Service]
+Type=simple
+User=utserver
+Group=utserver
+# Working system dir
+Directory=/opt/ut99/System
+
+# find binaries
+#32bit
+Environment=LD_LIBRARY_PATH=.
+# 64bit
+# Environment=LD_LIBRARY_PATH=/opt/ut99/System64:.
+
+# max time to startup should be between 60 and 120 if you got a lot of mods/maps
+TimeoutStartSec=90
+
+# Important: call the right ucc-bin direct, watch out for .ini and .log path...you may want to change
+# 32bit
+ExecStart=/opt/ut99/System/ucc-bin-x86 server "DM-Deck16][?game=Botpack.TeamGamePlus" ini=/opt/ut99/System/ut.ini log=/opt/ut99/System/ut.log -nohomedir
+
+#64bit
+#ExecStart=/opt/ut99/System64/ucc-bin-amd64 server "CTF-Face?game=Botpack.CTFGame" ini=/opt/ut99/System/ut.ini log=/opt/ut99/System/ut.log -nohomedir
+
+# kill process
+ExecStop=/usr/bin/pkill -u utserver ucc
+
+# Cleaning optional (ngWorldStats logs etc.)
+# ExecStopPost=/bin/bash -c 'rm -rf /opt/ut99/Logs/*.{log,tmp}'
+
+StandardOutput=journal
+StandardError=journal
+
+#restart on crashtime
+Restart=on-failure
+RestartSec=180
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+

@@ -1,0 +1,62 @@
+
+my default apache. you have to fix it if your using another webserver.
+
+
+/usr/local/bin
+server_manager.sh
+
+#!/bin/bash
+
+# this script is to start apache andd utserver services at once
+case "$1" in
+    start)
+        echo "--- Starting Services ---"
+        echo "Start Apache Webserver (apache2.service)..."
+        sudo systemctl start apache2.service
+        echo "Start UT Server (utserver.service)..."
+        sudo systemctl start utserver.service
+        echo "--- Started ---"
+        ;;
+    stop)
+        echo "--- Stop Services ---"
+        echo "Stopping UT Server (utserver.service)..."
+        sudo systemctl stop utserver.service
+        echo "Stopping Apache Webserver (apache2.service)..."
+        sudo systemctl stop apache2.service
+		echo "--- Stopped ---"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop}"
+        echo "Example sudo $0 start"
+        exit 1
+        ;;
+esac
+----------------------------------------------------------------------------------------------
+
+
+/lib/systemd/system/
+apache2.service
+
+[Unit]
+Description=The Apache HTTP Server
+After=network.target remote-fs.target nss-lookup.target
+Documentation=https://httpd.apache.org/docs/2.4/
+
+[Service]
+Type=forking
+Environment=APACHE_STARTED_BY_SYSTEMD=true
+ExecStart=/usr/sbin/apachectl start
+ExecStop=/usr/sbin/apachectl graceful-stop
+ExecReload=/usr/sbin/apachectl graceful
+KillMode=mixed
+PrivateTmp=true
+Restart=on-abort
+OOMPolicy=continue
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
